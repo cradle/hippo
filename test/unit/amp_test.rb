@@ -1,37 +1,25 @@
-require 'test/unit'
-require 'feed_tools'
-require 'feed_tools/helpers/feed_tools_helper'
+require File.dirname(__FILE__) + "/../test_helper"
 
 class AmpTest < Test::Unit::TestCase
-  include FeedTools::FeedToolsHelper
-  
-  def setup
-    FeedTools.reset_configurations
-    FeedTools.configurations[:tidy_enabled] = false
-    FeedTools.configurations[:feed_cache] = "FeedTools::DatabaseFeedCache"
-    FeedTools::FeedToolsHelper.default_local_path = 
-      File.expand_path(
-        File.expand_path(File.dirname(__FILE__)) + '/../feeds')
-  end
 
   def test_amp_01
     with_feed(:from_file => 'wellformed/amp/amp01.xml') { |feed|
       assert_equal("&amp;", feed.entries.first.title)
     }
   end
-  
+
   def test_amp_02
     with_feed(:from_file => 'wellformed/amp/amp02.xml') { |feed|
       assert_equal("&amp;", feed.entries.first.title)
     }
   end
-  
+
   def test_amp_03
     with_feed(:from_file => 'wellformed/amp/amp03.xml') { |feed|
       assert_equal("&amp;", feed.entries.first.title)
     }
   end
-  
+
   def test_amp_04
     with_feed(:from_file => 'wellformed/amp/amp04.xml') { |feed|
       assert_equal("&amp;", feed.entries.first.title)
@@ -397,7 +385,7 @@ class AmpTest < Test::Unit::TestCase
       assert_equal("<strong>&amp;</strong>", feed.entries.first.title)
     }
   end
-  
+
   def test_amp_65
     with_feed(:from_data => <<-FEED
       <feed version="0.3">
@@ -429,7 +417,7 @@ class AmpTest < Test::Unit::TestCase
       assert_equal("&amp;", feed.entries.first.title)
     }
   end
-  
+
   def test_amp_tidy_02
     FeedTools.configurations[:tidy_enabled] = true
     assert_equal(true, FeedTools::HtmlHelper.tidy_enabled?,
@@ -438,7 +426,7 @@ class AmpTest < Test::Unit::TestCase
       assert_equal("&amp;", feed.entries.first.title)
     }
   end
-  
+
   def test_amp_tidy_03
     FeedTools.configurations[:tidy_enabled] = true
     assert_equal(true, FeedTools::HtmlHelper.tidy_enabled?,
@@ -447,7 +435,7 @@ class AmpTest < Test::Unit::TestCase
       assert_equal("&amp;", feed.entries.first.title)
     }
   end
-  
+
   def test_amp_tidy_04
     FeedTools.configurations[:tidy_enabled] = true
     assert_equal(true, FeedTools::HtmlHelper.tidy_enabled?,
@@ -996,7 +984,7 @@ class AmpTest < Test::Unit::TestCase
       assert_equal("<strong>&amp;</strong>", feed.entries.first.title)
     }
   end
-  
+
   def test_amp_tidy_65
     FeedTools.configurations[:tidy_enabled] = true
     assert_equal(true, FeedTools::HtmlHelper.tidy_enabled?,

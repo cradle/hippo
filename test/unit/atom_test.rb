@@ -1,19 +1,6 @@
-require 'test/unit'
-require 'feed_tools'
-require 'feed_tools/helpers/feed_tools_helper'
+require File.dirname(__FILE__) + "/../test_helper"
 
 class AtomTest < Test::Unit::TestCase
-  include FeedTools::FeedToolsHelper
-  
-  def setup
-    FeedTools.reset_configurations
-    FeedTools.configurations[:tidy_enabled] = false
-    FeedTools.configurations[:feed_cache] = "FeedTools::DatabaseFeedCache"
-    FeedTools::FeedToolsHelper.default_local_path = 
-      File.expand_path(
-        File.expand_path(File.dirname(__FILE__)) + '/../feeds')
-  end
-
   def test_iri_feed
     if FeedTools::UriHelper.idn_enabled?
       with_feed(:from_url =>
@@ -24,7 +11,7 @@ class AtomTest < Test::Unit::TestCase
       }
     end
   end
-  
+
   def test_feed_title
     with_feed(:from_file => 'wellformed/atom/atom_namespace_1.xml') { |feed|
       assert_equal("Example Atom", feed.title)
@@ -51,7 +38,7 @@ class AtomTest < Test::Unit::TestCase
         feed.title)
     }
   end
-  
+
   def test_feed_link
     with_feed(:from_data => <<-FEED
       <feed version="0.3" xmlns="http://purl.org/atom/ns#">
@@ -174,7 +161,7 @@ class AtomTest < Test::Unit::TestCase
     FEED
     ) { |feed|
       assert_equal("http://example.com/3.html", feed.entries[0].link)
-    }    
+    }
     with_feed(:from_data => <<-FEED
       <?xml version="1.0" encoding="utf-8"?>
       <feed xmlns="http://www.w3.org/2005/Atom"
@@ -435,7 +422,7 @@ class AtomTest < Test::Unit::TestCase
       assert_equal(2, feed.entries[15].content.scan(
         'http://example.org/tests/contentbase/result.html').size,
         "Invalid URI resolution:\n#{feed.entries[15].content}")
-    }    
+    }
   end
 
   def test_feed_copyright
@@ -500,14 +487,14 @@ class AtomTest < Test::Unit::TestCase
       )
     }
   end
-  
+
   def test_feed_item_author
     with_feed(:from_data => <<-FEED
       <?xml version="1.0" encoding="iso-8859-1"?>
       <feed version="0.3" xmlns="http://purl.org/atom/ns#" xml:lang="en">
         <entry>
           <author>
-            <name>Cooper Baker</name>    
+            <name>Cooper Baker</name>
           </author>
         </entry>
       </feed>
@@ -517,7 +504,7 @@ class AtomTest < Test::Unit::TestCase
       assert_equal("Cooper Baker", feed.entries[0].author.name)
     }
   end
-  
+
   def test_feed_images
     with_feed(:from_data => <<-FEED
       <feed version="0.3" xmlns="http://purl.org/atom/ns#">
@@ -530,7 +517,7 @@ class AtomTest < Test::Unit::TestCase
       assert_equal(nil, feed.link)
     }
   end
-  
+
   def test_feed_item_summary_plus_content
     with_feed(:from_data => <<-FEED
       <?xml version="1.0" encoding="iso-8859-1"?>
@@ -547,7 +534,7 @@ class AtomTest < Test::Unit::TestCase
       assert_equal("Full Content", feed.items[0].content)
     }
   end
-  
+
   # Make sure it knows a title from a hole in the ground
   def test_all_feed_titles
     with_feed(:from_data => <<-FEED
@@ -729,7 +716,7 @@ class AtomTest < Test::Unit::TestCase
         feed.items[0].title, "XHTML NCR failed")
     }
   end
-  
+
   def test_feed_item_content_sanitization
     with_feed(:from_data => <<-FEED
       <?xml version="1.0" encoding="iso-8859-1"?>

@@ -1,13 +1,6 @@
-require 'test/unit'
-require 'feed_tools'
+require File.dirname(__FILE__) + "/../test_helper"
 
 class GenerationTest < Test::Unit::TestCase
-  def setup
-    FeedTools.reset_configurations
-    FeedTools.configurations[:tidy_enabled] = false
-    FeedTools.configurations[:feed_cache] = "FeedTools::DatabaseFeedCache"
-  end
-
   def test_generate_rss_20_from_scratch
     # Create the feed
     feed = FeedTools::Feed.new
