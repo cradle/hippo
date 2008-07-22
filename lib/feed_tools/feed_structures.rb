@@ -24,14 +24,14 @@
 module FeedTools
   # Represents a feed/feed item's category
   class Category
-  
+
     # The category term value
     attr_accessor :term
     # The categorization scheme
     attr_accessor :scheme
     # A human-readable description of the category
     attr_accessor :label
-  
+
     alias_method :value, :term
     alias_method :category, :term
     alias_method :domain, :scheme
@@ -120,16 +120,16 @@ module FeedTools
     # The relation type of the link
     attr_accessor :rel
     # The mime type of the link
-    attr_accessor :type    
+    attr_accessor :type
     # The title of the hyperlink
     attr_accessor :title
     # The length of the resource being linked to in bytes
     attr_accessor :length
-  
+
     alias_method :url, :href
     alias_method :url=, :href=
   end
-  
+
   # This class stores information about a feed item's file enclosures.
   class Enclosure
     # The url for the enclosure
@@ -165,83 +165,50 @@ module FeedTools
     attr_accessor :versions
     # The default version of the enclosed media file
     attr_accessor :default_version
-  
+
     alias_method :url, :href
     alias_method :url=, :href=
     alias_method :link, :href
     alias_method :link=, :href=
-    
+
     def initialize
       @expression = 'full'
     end
-  
+
     # Returns true if this is the default enclosure
-    def is_default?
-      return @is_default
-    end
-  
-    # Sets whether this is the default enclosure for the media group
-    def is_default=(new_is_default)
-      @is_default = new_is_default
-    end
-    
+    attr_accessor :is_default
+    alias_method :is_default?, :is_default
+
     # Returns true if the enclosure contains explicit material
-    def explicit?
-      return @explicit
-    end
-  
-    # Sets the explicit attribute on the enclosure
-    def explicit=(new_explicit)
-      @explicit = new_explicit
-    end
-  
+    attr_accessor :explicit
+    alias_method :explicit?, :explicit
+
     # Determines if the object is a sample, or the full version of the
     # object, or if it is a stream.
     # Possible values are 'sample', 'full', 'nonstop'.
-    def expression
-      return @expression
-    end
-  
+    attr_accessor :expression
+
+    EXPRESSIONS = %w{sample full nonstop} #:nodoc:
     # Sets the expression attribute on the enclosure.
     # Allowed values are 'sample', 'full', 'nonstop'.
     def expression=(new_expression)
-      unless ['sample', 'full', 'nonstop'].include? new_expression.downcase
-        return @expression
+      if EXPRESSIONS.include?(new_expression.downcase)
+        @expression = new_expression.downcase
       end
-      @expression = new_expression.downcase
-    end
-  
-    # Returns true if this enclosure contains audio content
-    def audio?
-      unless self.type.nil?
-        return true if (self.type =~ /^audio/) != nil
-      end
-      # TODO: create a more complete list
-      # =================================
-      audio_extensions = ['mp3', 'm4a', 'm4p', 'wav', 'ogg', 'wma']
-      audio_extensions.each do |extension|
-        if (url =~ /#{extension}$/) != nil
-          return true
-        end
-      end
-      return false
+      @expression
     end
 
+    AUDIO_EXTENSIONS = %w{mp3 m4a m4p wav ogg wma} #:nodoc:
+    # Returns true if this enclosure contains audio content
+    def audio?
+      self.type =~ /^audio/ || AUDIO_EXTENSIONS.any? {|extension| url =~ /#{extension}$/i }
+    end
+
+    VIDEO_EXTENSIONS = %w{mov mp4 avi wmv asf} #:nodoc:
     # Returns true if this enclosure contains video content
     def video?
-      unless self.type.nil?
-        return true if (self.type =~ /^video/) != nil
-        return true if self.type == "image/mov"
-      end
-      # TODO: create a more complete list
-      # =================================
-      video_extensions = ['mov', 'mp4', 'avi', 'wmv', 'asf']
-      video_extensions.each do |extension|
-        if (url =~ /#{extension}$/) != nil
-          return true
-        end
-      end
-      return false
+      self.type =~ /^video/ || self.type == 'image/mov' ||
+        VIDEO_EXTENSIONS.any? {|extension| url =~ /#{extension}$/i }
     end
   end
 
