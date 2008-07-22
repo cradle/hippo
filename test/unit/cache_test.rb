@@ -32,25 +32,25 @@ class CacheTest < Test::Unit::TestCase
     begin
       slashdot_feed = FeedTools::Feed.open(
         'http://www.slashdot.org/index.rss')
-      assert(slashdot_feed.feed_data != nil, "No content retrieved.")
-      assert(slashdot_feed.configurations[:feed_cache] != nil)
-      assert_equal(false, slashdot_feed.href.blank?)
+      assert_not_nil(slashdot_feed.feed_data, "No content retrieved.")
+      assert_not_nil(slashdot_feed.configurations[:feed_cache])
+      assert(!slashdot_feed.href.blank?)
       slashdot_feed.expire!
       slashdot_feed.expire!
-      assert_equal(true, slashdot_feed.expired?)
-      assert_equal(false, slashdot_feed.href.blank?)
+      assert(slashdot_feed.expired?)
+      assert(!slashdot_feed.href.blank?)
       slashdot_feed = FeedTools::Feed.open(
         'http://www.slashdot.org/index.rss')
-      assert(slashdot_feed.feed_data != nil, "No content retrieved.")
-      assert(slashdot_feed.configurations[:feed_cache] != nil)
-      assert_equal(true, slashdot_feed.live?)
-      assert_equal(false, slashdot_feed.href.blank?)
+      assert_not_nil(slashdot_feed.feed_data, "No content retrieved.")
+      assert_not_nil(slashdot_feed.configurations[:feed_cache])
+      assert(!!slashdot_feed.live?)
+      assert(!slashdot_feed.href.blank?)
       slashdot_feed = FeedTools::Feed.open(
         'http://www.slashdot.org/index.rss')
-      assert(slashdot_feed.feed_data != nil, "No content retrieved.")
-      assert(slashdot_feed.configurations[:feed_cache] != nil)
-      assert_equal(false, slashdot_feed.live?)
-      assert_equal(false, slashdot_feed.href.blank?)
+      assert_not_nil(slashdot_feed.feed_data, "No content retrieved.")
+      assert_not_nil(slashdot_feed.configurations[:feed_cache])
+      assert(!!slashdot_feed.live?)
+      assert(!slashdot_feed.href.blank?)
       
       # Make sure autodiscovery doesn't break the cache.
       assert_equal(slashdot_feed.href,

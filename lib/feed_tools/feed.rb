@@ -35,24 +35,24 @@ module FeedTools
     # Initialize the feed object
     def initialize
       super
-      @cache_object = nil
-      @http_headers = nil
-      @xml_document = nil
-      @feed_data = nil
+      # @cache_object = nil
+      # @http_headers = nil
+      # @xml_document = nil
+      # @feed_data = nil
       @feed_data_type = :xml
-      @root_node = nil
-      @channel_node = nil
-      @href = nil
-      @id = nil
-      @title = nil
-      @subtitle = nil
-      @link = nil
-      @last_retrieved = nil
-      @time_to_live = nil
-      @entries = nil
+      # @root_node = nil
+      # @channel_node = nil
+      # @href = nil
+      # @id = nil
+      # @title = nil
+      # @subtitle = nil
+      # @link = nil
+      # @last_retrieved = nil
+      # @time_to_live = nil
+      # @entries = nil
       @live = false
-      @encoding = nil
-      @options = nil
+      # @encoding = nil
+      # @options = nil
       @version = FeedTools::FEED_TOOLS_VERSION::STRING
     end
     
@@ -66,26 +66,10 @@ module FeedTools
         entry.instance_variable_set("@parent_feed", nil)
         entry.dispose if entry.respond_to?(:dispose)
       end
+      instance_variables.each do |ivar|
+        instance_variable_set ivar, nil
+      end
       self.entries = []
-      
-      @cache_object = nil
-      @http_headers = nil
-      @xml_document = nil
-      @feed_data = nil
-      @feed_data_type = nil
-      @root_node = nil
-      @channel_node = nil
-      @href = nil
-      @id = nil
-      @title = nil
-      @subtitle = nil
-      @link = nil
-      @last_retrieved = nil
-      @time_to_live = nil
-      @entries = nil
-      @live = false
-      @encoding = nil
-      @options = nil
 
       GC.start()
       self
@@ -161,17 +145,10 @@ module FeedTools
       end
     end
     
+    attr_accessor :configurations
     # Returns the load options for this feed.
     def configurations
-      if @configurations.blank?
-        @configurations = FeedTools.configurations.dup
-      end
-      return @configurations
-    end
-    
-    # Sets the load options for this feed.
-    def configurations=(new_configurations)
-      @configurations = new_configurations
+      @configurations ||= FeedTools.configurations.dup
     end
 
     # Loads the feed from the remote url if the feed has expired from the
@@ -526,37 +503,40 @@ module FeedTools
     end
         
     # Returns the relevant information from an http request.
-    def http_response
-      return @http_response
-    end
+    attr_reader :http_response
+    # def http_response
+    #   return @http_response
+    # end
 
     # Returns a hash of the http headers from the response.
     def http_headers
-      if @http_headers.blank?
-        if !self.cache_object.nil? && !self.cache_object.http_headers.nil?
-          @http_headers = YAML.load(self.cache_object.http_headers)
-          @http_headers = {} unless @http_headers.kind_of? Hash
+      @http_headers ||=  if cache_object && cache_object.http_headers
+          tmp = YAML.load(cache_object.http_headers)
+          tmp = {} unless tmp.kind_of? Hash
         else
-          @http_headers = {}
+          {}
         end
-      end
-      return @http_headers
     end
     
     # Returns the encoding that the feed was parsed with
     def encoding
-      if @encoding.blank?
-        if !self.http_headers.blank?
-          if self.http_headers['content-type'] =~ /charset=([\w\d-]+)/
-            @encoding = $1.downcase
-          else
-            @encoding = self.encoding_from_feed_data
-          end          
-        else
-          @encoding = self.encoding_from_feed_data
-        end
+      @encoding ||= if http_headers && http_headers['content-type'] =~ /charset=([\w\d-]+)/
+        $1.downcase
+      else
+        encoding_from_feed_data
       end
-      return @encoding
+      # if @encoding.blank?
+      #   if !self.http_headers.blank?
+      #     if self.http_headers['content-type'] =~ /charset=([\w\d-]+)/
+      #       @encoding = $1.downcase
+      #     else
+      #       @encoding = self.encoding_from_feed_data
+      #     end          
+      #   else
+      #     @encoding = self.encoding_from_feed_data
+      #   end
+      # end
+      # return @encoding
     end
     
     # Returns the encoding of feed calculated only from the xml data.
@@ -605,12 +585,7 @@ module FeedTools
   
     # Returns the feed's raw data.
     def feed_data
-      if @feed_data.nil?
-        unless self.cache_object.nil?
-          @feed_data = self.cache_object.feed_data
-        end
-      end
-      return @feed_data
+      @feed_data ||= cache_object ? cache_object.feed_data : nil
     end
   
     # Sets the feed's data.
@@ -687,22 +662,15 @@ module FeedTools
     # * :yaml
     # * :text
     def feed_data_type
-      if @feed_data_type.nil?
-        # Right now, nothing else is supported
-        @feed_data_type = :xml
-      end
-      return @feed_data_type
+      @feed_data_type ||= :xml
     end
 
     # Sets the feed's data type.
     def feed_data_type=(new_feed_data_type)
       @feed_data_type = new_feed_data_type
-      unless self.cache_object.nil?
-        self.cache_object.feed_data_type = new_feed_data_type
-      end
-      if self.feed_data_type != :xml
-        @xml_document = nil
-      end
+      cache_object.feed_data_type = new_feed_data_type if cache_object
+      @xml_document = nil unless feed_data_type == :xml
+      @feed_data_type
     end
 
     # Returns a REXML Document of the feed_data
@@ -843,28 +811,18 @@ module FeedTools
     # Possible values:
     # "rss", "atom", "cdf", "!okay/news"
     def feed_type
-      if @feed_type.nil?
-        if self.root_node.nil?
-          return nil
-        end
-        case self.root_node.name.downcase
-        when "feed"
-          @feed_type = "atom"
-        when "rdf:rdf"
-          @feed_type = "rss"
-        when "rdf"
-          @feed_type = "rss"
-        when "rss"
-          @feed_type = "rss"
-        when "channel"
-          if self.root_node.namespace == FEED_TOOLS_NAMESPACES['rss11']
-            @feed_type = "rss"
-          else
-            @feed_type = "cdf"
+      @feed_type ||= if root_node
+          case root_node.name.downcase
+          when 'feed'
+            'atom'
+          when /^rdf/, 'rss'
+            'rss'
+          when 'channel'
+            root_node.namespace == FEED_TOOLS_NAMESPACES['rss11'] ? 'rss' : 'cdf'
           end
+        else
+          nil
         end
-      end
-      return @feed_type
     end
   
     # Sets the default feed type

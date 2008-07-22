@@ -29,13 +29,13 @@ module FeedTools
   class FeedItem
     # Initialize the feed object
     def initialize
-      super
-      @feed_data = nil
+#      super
+#      @feed_data = nil
       @feed_data_type = :xml
-      @xml_document = nil
-      @root_node = nil
-      @title = nil
-      @id = nil
+      # @xml_document = nil
+      # @root_node = nil
+      # @title = nil
+      # @id = nil
       @time = Time.now.gmtime
       @version = FeedTools::FEED_TOOLS_VERSION::STRING
     end
@@ -44,13 +44,16 @@ module FeedTools
     # making the job of the garbage collector much, much easier.  Call this
     # method prior to feed entries going out of scope to prevent memory leaks.
     def dispose()
-      @feed_data = nil
-      @feed_data_type = nil
-      @xml_document = nil
-      @root_node = nil
-      @title = nil
-      @id = nil
-      @time = nil
+      # @feed_data = nil
+      # @feed_data_type = nil
+      # @xml_document = nil
+      # @root_node = nil
+      # @title = nil
+      # @id = nil
+      # @time = nil
+      instance_variables.each do |ivar|
+        instance_variable_set ivar, nil
+      end
     end
 
     # Returns the parent feed of this feed item
