@@ -15,13 +15,13 @@ module FeedTools
           class_eval %{
             def #{name}_with_caching
               returning #{name}_without_caching do |value|
-                self.cache.#{name} = value
+                self.cache.#{name} = value if self.cache
               end
             end
             
             def #{name}_with_caching=(value)
               #{name}_without_caching = value
-              self.cache.#{name} = value
+              self.cache.#{name} = value if self.cache
             end
           }
           alias_method_chain name, :caching

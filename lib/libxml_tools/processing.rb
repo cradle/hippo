@@ -7,29 +7,24 @@ module FeedTools
       FeedTools.processor.try_xpaths(nodes, paths, options)
     end
 
-    # Finds the first node under the given node that matches the given XPath expression.
-    def find_node(node, path, options={})
-      find_all_nodes(node, path, options).first
-    end
-
-    # Finds all nodes under the given node that match the given XPath expression.
-    def find_all_nodes(node, path, options={})
-      FeedTools.processor.find_all_nodes(node, path, options)
-    end
-
     # Returns the root node for the document (requires #document accessor)
     def root_node(options={})
-      FeedTools.processor.root_node(document, options)
+      @root_node ||= FeedTools.processor.root_node(document, options)
     end
 
-    # Returns the channel node for the document (requires #document accessor)
-    def channel_node(options={})
-      FeedTools.processor.channel_node(document, options)
+    # Shortcut for try_xpaths with :select_result_value option
+    def select_value(nodes, paths, options={})
+      try_xpaths(nodes, paths, options.merge(:select_result_value => true))
     end
 
     # Parses an XML Document from the given string
     def parse(data)
       FeedTools.processor.parse(data)
+    end
+
+    # Determines whether the given node has the given namespace
+    def has_namespace?(node, namespace)
+      FeedTools.processor.has_namespace?(node, namespace)
     end
 
     def process_text_and_strip_wrapper(node)

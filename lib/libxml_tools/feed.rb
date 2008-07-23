@@ -23,79 +23,134 @@ module FeedTools
     end
 
     def itunes_summary
-      value = try_xpaths([channel_node, root_node],
-                        %w{itunes:summary/text()},
-                        :select_result_value => true)
+      value = select_value([channel_node, root_node], %w{itunes:summary/text()})
       unescape_and_sanitize(value)
     end
 
     def itunes_subtitle
-      value = try_xpaths([channel_node, root_node],
-                        %w{itunes:subtitle/text()},
-                        :select_result_value => true)
+      value = select_value([channel_node, root_node], %w{itunes:subtitle/text()})
       unescape_and_sanitize(value)
     end
 
     def itunes_author
-      unescape(try_xpaths(channel_node,
-                          %w{itunes:author/text()},
-                          :select_result_value => true))
+      unescape(select_value(channel_node, %w{itunes:author/text()}))
     end
 
     def media_text
-      value = try_xpaths([channel_node, root_node],
-                        %w{media:text/text()},
-                        :select_result_value => true)
+      value = select_value([channel_node, root_node], %w{media:text/text()})
       unescape_and_sanitize(value)
     end
 
     def time
-      value = try_xpaths(channel_node, %w{
+      value = select_value(channel_node, %w{
         atom10:updated/text() atom03:updated/text() atom:updated/text()
         updated/text() atom10:modified/text() atom03:modified/text()
         atom:modified/text() modified/text() time/text()
         lastBuildDate/text() atom10:issued/text() atom03:issued/text()
         atom:issued/text() issued/text() atom10:published/text()
         atom03:published/text() atom:published/text() published/text()
-        dc:date/text() pubDate/text() date/text()},
-        :select_result_value => true)
+        dc:date/text() pubDate/text() date/text()})
 
       Time.parse(value).gmtime rescue Time.now.gmtime
     end
 
     def updated
-      value = try_xpaths(channel_node, %w{
+      value = select_value(channel_node, %w{
         atom10:updated/text() atom03:updated/text() atom:updated/text()
         updated/text() atom10:modified/text() atom03:modified/text()
-        atom:modified/text() modified/text() lastBuildDate/text()},
-        :select_result_value => true)
+        atom:modified/text() modified/text() lastBuildDate/text()})
 
       Time.parse(value).gmtime rescue nil
     end
 
     def published
-      value = try_xpaths(channel_node, %w{
+      value = select_value(channel_node, %w{
         atom10:published/text() atom03:published/text() atom:published/text()
         published/text() dc:date/text() pubDate/text() atom10:issued/text()
-        atom03:issued/text() atom:issued/text() issued/text()},
-        :select_result_value => true)
-      
+        atom03:issued/text() atom:issued/text() issued/text()})
+
       Time.parse(value).gmtime rescue nil
     end
-    
+
     def feed_data_type
       :xml
     end
-    
-    def http_headers
-      cache && cache.http_headers ? cache.http_headers
+
+    def feed_type
+      if root_node
+        case root_node.name.downcase
+        when 'feed'
+          'atom'
+        when /^rdf/, 'rss'
+          'rss'
+        when 'channel'
+          has_namespace?(root_node, FeedTools::NAMESPACES['rss11']) ? 'rss' : 'cdf'
+        end
+      else
+        nil
+      end
     end
 
+    def http_headers
+      cache && cache.http_headers ? cache.http_headers : {}
+    end
+
+    def time_to_live
+      # TODO: scope within defaults
+      syn_frequency || _ttl || schedule
+    end
+
+    def syn_frequency
+      frequency = select_value(channel_node, %w{syn:updateFrequency/text()})
+      if frequency
+        period = select_value(channel_node, %w{syn:updatePeriod/text()})
+        case period
+        when 'daily'
+          frequency.to_i.days
+        when 'weekly'
+          frequency.to_i.weeks
+        when 'monthly'
+          frequency.to_i.months
+        when 'yearly'
+          frequency.to_i.years
+        else # hourly
+          frequency.to_i.hours
+        end
+      else
+        nil
+      end
+    end
+
+    def _ttl
+      # usually expressed in minutes
+      frequency = select_value(channel_node, %w{ttl/text()})
+      if frequency
+        span = select_value(channel_node, %w{ttl/@span})
+        # Assumes the span is a valid period method as defined by ActiveSupport
+        frequency.to_i.send(span || :minutes)
+      else
+        nil
+      end
+    end
+
+    def schedule
+      days = select_value(channel_node, %w{schedule/intervaltime/@day}).to_i
+      hours = select_value(channel_node, %w{schedule/intervaltime/@hour}).to_i
+      minutes = select_value(channel_node, %w{schedule/intervaltime/@min}).to_i
+      seconds = select_value(channel_node, %w{schedule/intervaltime/@sec}).to_i
+      total = seconds + minutes.minutes + hours.hours + days.days
+      total != 0 ? total : nil
+    end
+
+    def channel_node
+      try_xpaths(root_node, %w{channel CHANNEL feedinfo news}) || root_node
+    end
+    
     cache :title, :href, :link, :feed_data_type, :last_retrieved,
           :feed_data, :http_headers, :time_to_live
 
     memoize :subtitle, :itunes_summary, :itunes_subtitle, :itunes_author,
-            :time, :updated, :published
+            :time, :updated, :published, :feed_type, :channel_node
 
     alias_method :url, :href
     alias_method :url=, :href=
