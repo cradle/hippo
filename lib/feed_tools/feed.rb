@@ -55,7 +55,7 @@ module FeedTools
       # @options = nil
       @version = FeedTools::FEED_TOOLS_VERSION::STRING
     end
-    
+
     # Breaks any references that the feed may be keeping around, thus making
     # the job of the garbage collector much, much easier.  Call this
     # method prior to feeds going out of scope to prevent memory leaks.
@@ -74,7 +74,7 @@ module FeedTools
       GC.start()
       self
     end
-          
+
     # Loads the feed specified by the url, pulling the data from the
     # cache if it hasn't expired.  Options supplied will override the
     # default options.
@@ -88,7 +88,7 @@ module FeedTools
       feed_configurations = FeedTools.configurations.merge(options)
       cache_object = nil
       deserialized_feed = nil
-      
+
       if feed_configurations[:feed_cache] != nil && FeedTools.feed_cache.nil?
         raise(ArgumentError, "There is currently no caching mechanism set. " +
           "Cannot retrieve cached feeds.")
@@ -124,7 +124,7 @@ module FeedTools
         rescue Exception
         end
       end
-      
+
       if deserialized_feed == nil
         # create the new feed
         feed = FeedTools::Feed.new
@@ -138,13 +138,13 @@ module FeedTools
         end
         feed.update! unless feed.configurations[:disable_update_from_remote]
         Thread.pass
-      
+
         return feed
       else
         return deserialized_feed
       end
     end
-    
+
     attr_accessor :configurations
     # Returns the load options for this feed.
     def configurations
@@ -177,7 +177,7 @@ module FeedTools
         @live = false
       else
         load_remote_feed!
-        
+
         # Handle autodiscovery
         if self.http_headers['content-type'] =~ /text\/html/ ||
             self.http_headers['content-type'] =~ /application\/xhtml\+xml/
@@ -189,7 +189,7 @@ module FeedTools
                 "application/#{type}+xml")
             break unless autodiscovered_url.nil?
           end
-          
+
           if autodiscovered_url != nil
             begin
               autodiscovered_url = FeedTools::UriHelper.resolve_relative_uri(
@@ -201,7 +201,7 @@ module FeedTools
                 "Autodiscovery loop detected: #{autodiscovered_url}"
             end
             self.feed_data = nil
-            
+
             self.href = autodiscovered_url
             if FeedTools.feed_cache.nil?
               self.cache_object = nil
@@ -239,7 +239,7 @@ module FeedTools
             self.update!
           end
         end
-        
+
         # Reset everything that needs to be reset.
         @xml_document = nil
         @encoding_from_feed_data = nil
@@ -252,13 +252,13 @@ module FeedTools
         @link = nil
         @time_to_live = nil
         @entries = nil
-        
+
         if self.configurations[:lazy_parsing_enabled] == false
           self.full_parse()
         end
       end
     end
-  
+
     # Attempts to load the feed from the remote location.  Requires the url
     # field to be set.  If an etag or the last_modified date has been set,
     # attempts to use them to prevent unnecessary reloading of identical
@@ -269,7 +269,7 @@ module FeedTools
           !(self.cache_object.http_headers.nil?)
         @http_headers = YAML.load(self.cache_object.http_headers)
       end
-    
+
       if (self.href =~ /^feed:/) == 0
         # Woah, Nelly, how'd that happen?  You should've already been
         # corrected.  So let's fix that url.  And please,
@@ -277,7 +277,7 @@ module FeedTools
         # pseudo-protocol hacks.
         self.href = FeedTools::UriHelper.normalize_url(self.href)
       end
-    
+
       # Find out what method we're going to be using to obtain this feed.
       begin
         uri = URI.parse(self.href)
@@ -300,7 +300,7 @@ module FeedTools
         raise FeedAccessError,
           "Cannot retrieve feed using unrecognized protocol: " + uri.scheme
       end
-    
+
       # No need for http headers unless we're actually doing http
       if retrieval_method == "http"
         begin
@@ -319,18 +319,18 @@ module FeedTools
                       !cached_feed.http_headers.blank?
                     # Copy the cached state
                     self.href = cached_feed.href
-    
+
                     @feed_data = cached_feed.feed_data
                     @feed_data_type = cached_feed.feed_data_type
-    
+
                     if @feed_data.blank?
                       raise "Invalid cache data."
                     end
-    
+
                     @title = nil; self.title
                     self.href
                     @link = nil; self.link
-                  
+
                     self.last_retrieved = cached_feed.last_retrieved
                     self.http_headers = cached_feed.http_headers
                     self.cache_object = cached_feed.cache_object
@@ -407,20 +407,20 @@ module FeedTools
         end
       end
     end
-    
+
     # Does a full parse of the feed.
     def full_parse
       self.href
 
       self.cache_object
-      
+
       self.http_headers
       self.encoding
       self.feed_data_utf_8
       self.xml_document
       self.root_node
       self.channel_node
-      
+
       self.base_uri
       self.feed_type
       self.feed_version
@@ -457,14 +457,14 @@ module FeedTools
       self.media_text
 
       self.explicit?
-      
+
       self.entries.each do |entry|
         entry.full_parse()
       end
 
       nil
     end
-    
+
     # Does a full parse, then serializes the feed object directly to the
     # cache.
     def serialize_to_cache
@@ -480,7 +480,7 @@ module FeedTools
       end
       return nil
     end
-    
+
     # Returns a duplicate object suitable for serialization
     def serializable
       self.full_parse()
@@ -501,7 +501,7 @@ module FeedTools
       end
       return feed_to_dump
     end
-        
+
     # Returns the relevant information from an http request.
     attr_reader :http_response
     # def http_response
@@ -517,7 +517,7 @@ module FeedTools
           {}
         end
     end
-    
+
     # Returns the encoding that the feed was parsed with
     def encoding
       @encoding ||= if http_headers && http_headers['content-type'] =~ /charset=([\w\d-]+)/
@@ -531,21 +531,21 @@ module FeedTools
       #       @encoding = $1.downcase
       #     else
       #       @encoding = self.encoding_from_feed_data
-      #     end          
+      #     end
       #   else
       #     @encoding = self.encoding_from_feed_data
       #   end
       # end
       # return @encoding
     end
-    
+
     # Returns the encoding of feed calculated only from the xml data.
     # I.e., the encoding we would come up with if we ignore RFC 3023.
     def encoding_from_feed_data
       if @encoding_from_feed_data.blank?
         raw_data = self.feed_data
         return nil if raw_data.nil?
-        encoding_from_xml_instruct = 
+        encoding_from_xml_instruct =
           raw_data.scan(
             /^<\?xml [^>]*encoding="([^\"]*)"[^>]*\?>/
           ).flatten.first
@@ -582,12 +582,12 @@ module FeedTools
       end
       return @encoding_from_feed_data
     end
-  
+
     # Returns the feed's raw data.
     def feed_data
       @feed_data ||= cache_object ? cache_object.feed_data : nil
     end
-  
+
     # Sets the feed's data.
     def feed_data=(new_feed_data)
       for var in self.instance_variables
@@ -623,7 +623,7 @@ module FeedTools
         end
         self.update!
       end
-      
+
       # Get these things parsed in the correct order to avoid the retardedly
       # painful corecursion issues.
       self.href
@@ -632,7 +632,7 @@ module FeedTools
       self.links
       self.link
     end
-    
+
     # Returns the feed's raw data as utf-8.
     def feed_data_utf_8(force_encoding=nil)
       if @feed_data_utf_8.nil?
@@ -655,7 +655,7 @@ module FeedTools
       end
       return @feed_data_utf_8
     end
-    
+
     # Returns the data type of the feed
     # Possible values:
     # * :xml
@@ -695,7 +695,7 @@ module FeedTools
       end
       return @xml_document
     end
-  
+
     # Returns the first node within the channel_node that matches the xpath
     # query.
     def find_node(xpath, select_result_value=false)
@@ -705,7 +705,7 @@ module FeedTools
       return FeedTools::XmlHelper.try_xpaths(self.channel_node, [xpath],
         :select_result_value => select_result_value)
     end
-  
+
     # Returns all nodes within the channel_node that match the xpath query.
     def find_all_nodes(xpath, select_result_value=false)
       if self.feed_data_type != :xml
@@ -714,7 +714,7 @@ module FeedTools
       return FeedTools::XmlHelper.try_xpaths_all(self.channel_node, [xpath],
         :select_result_value => select_result_value)
     end
-  
+
     # Returns the root node of the feed.
     def root_node
       if @root_node.nil?
@@ -734,7 +734,7 @@ module FeedTools
       end
       return @root_node
     end
-  
+
     # Returns the channel node of the feed.
     def channel_node
       if @channel_node.nil? && self.root_node != nil
@@ -750,7 +750,7 @@ module FeedTools
       end
       return @channel_node
     end
-  
+
     # The cache object that handles the feed persistence.
     def cache_object
       if !@href.nil? && @href =~ /^file:\/\//
@@ -779,12 +779,12 @@ module FeedTools
               @cache_object = FeedTools.feed_cache.new
             end
           rescue
-          end      
+          end
         end
       end
       return @cache_object
     end
-  
+
     # Sets the cache object for this feed.
     #
     # This can be any object, but it must accept the following messages:
@@ -806,7 +806,7 @@ module FeedTools
     def cache_object=(new_cache_object)
       @cache_object = new_cache_object
     end
-  
+
     # Returns the type of feed
     # Possible values:
     # "rss", "atom", "cdf", "!okay/news"
@@ -824,12 +824,12 @@ module FeedTools
           nil
         end
     end
-  
+
     # Sets the default feed type
     def feed_type=(new_feed_type)
       @feed_type = new_feed_type
     end
-  
+
     # Returns the version number of the feed type.
     # Intentionally does not differentiate between the Netscape and Userland
     # versions of RSS 0.91.
@@ -914,17 +914,17 @@ module FeedTools
       end
       return @id
     end
-  
+
     # Sets the feed's unique id
     def id=(new_id)
       @id = new_id
     end
-  
+
     # Returns the feed url.
     def href
       if @href_overridden != true || @href.nil?
         original_href = @href
-      
+
         override_href = lambda do |current_href|
           begin
             if current_href.nil? && self.feed_data != nil
@@ -981,7 +981,7 @@ module FeedTools
           end
           @links = nil
           @link = nil
-          
+
           # rdf:about is ordered last because a lot of people put the url to
           # the feed inside it instead of a link to their blog.
           # Ordering it last gives them as many chances as humanly possible
@@ -1009,7 +1009,7 @@ module FeedTools
           end
           if self.configurations[:url_normalization_enabled]
             @href = FeedTools::UriHelper.normalize_url(@href)
-          end            
+          end
           @href.strip! unless @href.nil?
           @href = nil if @href.blank?
           @href_overridden = true
@@ -1029,13 +1029,13 @@ module FeedTools
       end
       return @href
     end
-  
+
     # Sets the feed url and prepares the cache_object if necessary.
     def href=(new_href)
       @href = FeedTools::UriHelper.normalize_url(new_href)
       self.cache_object.href = new_href unless self.cache_object.nil?
     end
-  
+
     # Returns the feed title
     def title
       if @title.nil?
@@ -1060,7 +1060,7 @@ module FeedTools
       end
       return @title
     end
-  
+
     # Sets the feed title
     def title=(new_title)
       @title = new_title
@@ -1286,7 +1286,7 @@ module FeedTools
         self.cache_object.link = new_link
       end
     end
-    
+
     # Returns the links collection
     def links
       if @links.blank?
@@ -1435,12 +1435,12 @@ module FeedTools
       end
       return @links
     end
-    
+
     # Sets the links collection
     def links=(new_links)
       @links = new_links
     end
-    
+
     # Returns the base uri for the feed, used for resolving relative paths
     def base_uri
       if @base_uri.nil?
@@ -1482,7 +1482,7 @@ module FeedTools
       end
       return @base_uri
     end
-            
+
     # Sets the base uri for the feed
     def base_uri=(new_base_uri)
       @base_uri = new_base_uri
@@ -1525,7 +1525,7 @@ module FeedTools
       end
       return @icon
     end
-    
+
     # Returns the favicon url for this feed.
     # This method first tries to use the url from the link field instead of
     # the feed url, in order to avoid grabbing the favicon for services like
@@ -1717,7 +1717,7 @@ module FeedTools
     def publisher
       if @publisher.nil?
         @publisher = FeedTools::Author.new
-        @publisher.raw = FeedTools::HtmlHelper.unescape_entities(        
+        @publisher.raw = FeedTools::HtmlHelper.unescape_entities(
           FeedTools::XmlHelper.try_xpaths(self.channel_node, [
             "webMaster/text()",
             "dc:publisher/text()"
@@ -1773,7 +1773,7 @@ module FeedTools
             end
           rescue
           end
-        end        
+        end
       end
       return @publisher
     end
@@ -1794,7 +1794,7 @@ module FeedTools
         @publisher.name = new_publisher
       end
     end
-  
+
     # Returns the contents of the itunes:author element
     #
     # Returns any incorrectly placed channel-level itunes:author
@@ -1855,12 +1855,12 @@ module FeedTools
       end
       return @time
     end
-  
+
     # Sets the feed time
     def time=(new_time)
       @time = new_time
     end
-  
+
     # Returns the feed updated time
     def updated
       if @updated.nil?
@@ -1883,7 +1883,7 @@ module FeedTools
       end
       return @updated
     end
-  
+
     # Sets the feed updated time
     def updated=(new_updated)
       @updated = new_updated
@@ -1913,7 +1913,7 @@ module FeedTools
       end
       return @published
     end
-  
+
     # Sets the feed published time
     def published=(new_published)
       @published = new_published
@@ -1951,7 +1951,7 @@ module FeedTools
       end
       return @categories
     end
-  
+
     # Returns a list of the feed's images
     def images
       if @images.nil?
@@ -1986,7 +1986,7 @@ module FeedTools
             end
             if self.configurations[:url_normalization_enabled]
               image.href = FeedTools::UriHelper.normalize_url(image.href)
-            end            
+            end
             image.href.strip! unless image.href.nil?
             next if image.href.blank?
             image.title = FeedTools::XmlHelper.try_xpaths(image_node,
@@ -2067,12 +2067,12 @@ module FeedTools
       end
       return @licenses
     end
-    
+
     # Sets the feed item's licenses.
     def licenses=(new_licenses)
       @licenses = new_licenses
     end
-    
+
     # Returns the number of seconds before the feed should expire
     def time_to_live
       if @time_to_live.nil?
@@ -2204,12 +2204,12 @@ module FeedTools
       end
       return @cloud
     end
-  
+
     # Sets the feed's cloud
     def cloud=(new_cloud)
       @cloud = new_cloud
     end
-  
+
     # Returns the feed's text input field
     def text_input
       if @text_input.nil?
@@ -2237,7 +2237,7 @@ module FeedTools
       end
       return @text_input
     end
-    
+
     # Returns the feed generator
     def generator
       if @generator.nil?
@@ -2326,7 +2326,7 @@ module FeedTools
     def language=(new_language)
       @language = new_language
     end
-  
+
     # Returns true if this feed contains explicit material.
     def explicit?
       if @explicit.nil?
@@ -2347,7 +2347,7 @@ module FeedTools
     def explicit=(new_explicit)
       @explicit = (new_explicit ? true : false)
     end
-  
+
     # Returns the feed entries
     def entries
       if @entries.nil?
@@ -2397,7 +2397,7 @@ module FeedTools
           end
         end
       end
-    
+
       # Sort the items
       if self.configurations[:entry_sorting_property] == "time"
         @entries = @entries.sort do |a, b|
@@ -2424,7 +2424,7 @@ module FeedTools
       end
       @entries = new_entries
     end
-    
+
     # Syntactic sugar for appending feed items to a feed.
     def <<(new_entry)
       @entries ||= []
@@ -2434,7 +2434,7 @@ module FeedTools
       end
       @entries << new_entry
     end
-  
+
     # The time that the feed was last requested from the remote server.  Nil
     # if it has never been pulled, or if it was created from scratch.
     def last_retrieved
@@ -2443,7 +2443,7 @@ module FeedTools
       end
       return @last_retrieved
     end
-  
+
     # Sets the time that the feed was last updated.
     def last_retrieved=(new_last_retrieved)
       @last_retrieved = new_last_retrieved
@@ -2451,7 +2451,7 @@ module FeedTools
         self.cache_object.last_retrieved = new_last_retrieved
       end
     end
-  
+
     # True if this feed contains audio content enclosures
     def podcast?
       podcast = false
@@ -2473,12 +2473,12 @@ module FeedTools
       end
       return vidlog
     end
-  
+
     # True if the feed was not last retrieved from the cache.
     def live?
       return @live
     end
-  
+
     # True if the feed has expired and must be reacquired from the remote
     # server.
     def expired?
@@ -2490,7 +2490,7 @@ module FeedTools
         return (self.last_retrieved + self.time_to_live) < Time.now.gmtime
       end
     end
-  
+
     # Forces this feed to expire.
     def expire!
       self.last_retrieved = Time.mktime(1970).gmtime
@@ -2508,7 +2508,7 @@ module FeedTools
     def build_xml(feed_type=(self.feed_type or "atom"), feed_version=nil,
         xml_builder=Builder::XmlMarkup.new(
           :indent => 2, :escape_attrs => false))
-      
+
       if self.find_node("access:restriction/@relationship").to_s == "deny"
         raise StandardError,
           "Operation not permitted.  This feed denies redistribution."
@@ -2516,9 +2516,9 @@ module FeedTools
         raise StandardError,
           "Operation not permitted.  This feed denies redistribution."
       end
-      
+
       self.full_parse()
-      
+
       xml_builder.instruct! :xml, :version => "1.0",
         :encoding => (self.configurations[:output_encoding] or "utf-8")
       if feed_type.nil?
@@ -2814,7 +2814,7 @@ module FeedTools
     end
 
     alias_method :url, :href
-    alias_method :url=, :href=  
+    alias_method :url=, :href=
     alias_method :tagline, :subtitle
     alias_method :tagline=, :subtitle=
     alias_method :description, :subtitle
@@ -2829,7 +2829,7 @@ module FeedTools
     alias_method :guid=, :id=
     alias_method :items, :entries
     alias_method :items=, :entries=
-  
+
     # passes missing methods to the cache_object
     def method_missing(msg, *params)
       if self.cache_object.nil?
@@ -2849,12 +2849,12 @@ module FeedTools
       end
       return result
     end
-  
+
     # Returns a simple representation of the feed object's state.
     def inspect
       return "#<FeedTools::Feed:0x#{self.object_id.to_s(16)} URL:#{self.href}>"
     end
-    
+
     # Allows sorting feeds by title
     def <=>(other_feed)
       return self.title.to_s <=> other_feed.title.to_s

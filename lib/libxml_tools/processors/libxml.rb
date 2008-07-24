@@ -18,6 +18,17 @@ module FeedTools
         end
       end
       
+      def try_xpaths_all(nodes, xpaths, options={})
+        nodes, xpaths = Array(nodes).flatten.compact, Array(xpaths).flatten.compact
+        raise ArgumentError, "You must specify a node and an XPath expression" if nodes.empty? || xpaths.empty?
+        results = nodes.map {|node| xpaths.map {|xpath| node.find(xpath, FeedTools::NAMESPACES) } }.flatten.compact
+        if options[:select_result_value]
+          results.map { |n| n.content }
+        else
+          results
+        end
+      end
+      
       def root_node(document, options={})
         document.root
       end

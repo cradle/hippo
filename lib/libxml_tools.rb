@@ -83,11 +83,33 @@ module FeedTools
     "xml" => "http://www.w3.org/XML/1998/namespace"
   }
   
+  DEFAULTS = {
+    :feed_cache => "DatabaseFeedCache",
+    :always_strip_wrapper_elements => false,
+    :disable_update_from_remote => false,
+    :max_ttl => (3 * 24 * 60 * 60 * 60), # 3 days
+    :default_ttl => (1 * 60 * 60) # 1 hour
+  }
+  
   PROCESSORS = %w{libxml} # TODO: hpricot rexml
   ENVIRONMENT = ENV['FEED_TOOLS_ENV'] || ENV['RAILS_ENV'] || 'development'
   
   class << self
     attr_accessor :processor, :feed_cache
+    
+    def feed_cache
+      @feed_cache ||= begin
+        cache =  FeedTools.const_get(defaults[:feed_cache])
+        cache.initialize_cache
+        cache
+      rescue NameError
+        nil
+      end
+    end
+    
+    def defaults
+      @defaults ||= ::FeedTools::DEFAULTS.dup
+    end
 
     def load_processor(name)
       require "#{module_dir}/processors/#{name}"
@@ -105,6 +127,7 @@ begin
   require 'uri'
   require 'time'
   require 'date'
+  require 'cgi'
   require 'yaml'
   
   require 'activesupport'
@@ -112,13 +135,19 @@ begin
   # Now try to load an XML backend
   procs = FeedTools::PROCESSORS.dup
   begin
-    processor = procs.shift
-    FeedTools.load_processor(processor)
+    FeedTools.load_processor(procs.shift)
   rescue LoadError, NameError
     retry unless procs.empty?
-    raise LoadError.new("No FeedTools XML processors available. Tried #{FeedTools::PROCESSORS.join(', ')}")
+    raise LoadError.new("No FeedTools XML processors available. Tried #{FeedTools::PROCESSORS.join(', ')}.")
   end
   
+  # Mixins
+  require "#{module_dir}/memoize"
+  require "#{module_dir}/caching"
+  require "#{module_dir}/processing"
+  require "#{module_dir}/sanitize"
+  
+  # Core classes
   require "#{module_dir}/feed"
   require "#{module_dir}/feed_item"
   require "#{module_dir}/feed_structures"

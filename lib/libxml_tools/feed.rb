@@ -96,8 +96,8 @@ module FeedTools
     end
 
     def time_to_live
-      # TODO: scope within defaults
-      syn_frequency || _ttl || schedule
+      time = syn_frequency || _ttl || schedule || FeedTools.defaults[:default_ttl]
+      time >= FeedTools.defaults[:max_ttl] ? FeedTools.defaults[:max_ttl] : time
     end
 
     def syn_frequency
@@ -139,7 +139,7 @@ module FeedTools
       minutes = select_value(channel_node, %w{schedule/intervaltime/@min}).to_i
       seconds = select_value(channel_node, %w{schedule/intervaltime/@sec}).to_i
       total = seconds + minutes.minutes + hours.hours + days.days
-      total != 0 ? total : nil
+      total if total > 0
     end
 
     def channel_node

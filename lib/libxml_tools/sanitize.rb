@@ -1,13 +1,17 @@
 module FeedTools
   module Sanitize
+    # Unescapes HTML entities and removes script tags, stripping whitespace 
+    # from the result
     def unescape_and_sanitize(text)
       sanitize(unescape(text)).strip
     end
 
+    # Escapes control characters into their corresponding HTML entities
     def escape(text)
       CGI.escapeHTML(text).gsub(/'/, '&apos;').gsub(/"/, '&quot;')
     end
 
+    # Unescapes HTML/XML entities into their original characters
     def unescape(text)
       CGI.unescapeHTML(
         text.gsub(/&#x26;/, "&amp;").
@@ -20,9 +24,26 @@ module FeedTools
       ).gsub(/&apos;/, "'").gsub(/&quot;/, '"')
     end
 
-    # TODO: sanitize_html missing from original HtmlHelper
+    # Sanitizes script tags out of the passed text or HTML
     def sanitize(text)
-      text
+      # TODO: sanitize_html missing from original HtmlHelper
+      # Let's just assume we're stripping scripts and styles
+      text.gsub(/<script[^>]*>(.|\n)*(<\/script>)?/i, '').
+        gsub(/<style[^>]*>(.|\n)*(<\/style>)?/i, '')
+    end
+    
+    # Strips HTML tags from the input
+    def strip_html(html)
+      html.gsub(/<\/?[^>]+>/, '')
+    end
+
+    # Converts HTML into plain text, stripping tags and unescaping entitites
+    def html_to_text(html)
+      unescape(strip_html(html)).
+        gsub(/&#8216;/, "'").
+        gsub(/&#8217;/, "'").
+        gsub(/&#8220;/, "\"").
+        gsub(/&#8221;/, "\"")
     end
   end
 end
