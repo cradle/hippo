@@ -1,4 +1,5 @@
 #--
+# Copyright (c) 2008 Sean Cribbs
 # Copyright (c) 2005 Robert Aman
 #
 # Permission is hereby granted, free of charge, to any person obtaining
