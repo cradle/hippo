@@ -104,8 +104,8 @@ module FeedTools
     end
   end
 
-  EnclosureHash = Struct.new(:hash, :type )
-  EnclosurePlayer = Struct.new(:url, :height, :width )
+  EnclosureHash = Struct.new(:hash, :type)
+  EnclosurePlayer = Struct.new(:url, :height, :width)
   EnclosureCredit = Struct.new(:name, :role )
-  EnclosureThumbnail = Struct.new(:url, :height, :width )
+  EnclosureThumbnail = Struct.new(:url, :height, :width)
 end

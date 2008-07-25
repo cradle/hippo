@@ -40,6 +40,10 @@ module FeedTools
       def parse(data)
         LibXML::XML::Parser.string(data).parse
       end
+      
+      def encoding(document)
+        document.encoding
+      end
     end
   end
 end

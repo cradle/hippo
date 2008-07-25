@@ -5,17 +5,17 @@ module FeedTools
     include FeedTools::Sanitize
     
     def title
-      title_node = try_xpaths(channel_node, %w[atom10:title atom03:title
+      title_node = try_xpaths(channel_node, %w{atom10:title atom03:title
                                                atom:title title dc:title
-                                               channelTitle TITLE])
+                                               channelTitle TITLE})
       process_text_and_strip_wrapper(title_node)
     end
 
     def subtitle
       subtitle_node = try_xpaths(channel_node,
-        %w[atom10:subtitle subtitle atom03:tagline tagline description summary
+        %w{atom10:subtitle subtitle atom03:tagline tagline description summary
            abstract ABSTRACT content:encoded encoded content xhtml:body body
-           xhtml:div div p:payload payload channelDescription blurb info])
+           xhtml:div div p:payload payload channelDescription blurb info})
       process_text_and_strip_wrapper(subtitle_node) || itunes_summary || itunes_subtitle
     end
 
@@ -234,15 +234,69 @@ module FeedTools
       end
     end
 
+    def encoding
+      @encoding ||= if http_headers && http_headers['content-type'] =~ /charset=([\w\d-]+)/
+        $1.downcase
+      else
+        encoding_from_xml
+      end
+    end
+    
+    def feed_data
+      cache.feed_data if cache
+    end
+    
+    def document
+      parse(feed_data)
+    end
+
+    def rights
+      process_text_and_strip_wrapper(try_xpaths(channel_node, %w{
+        atom10:copyright atom03:copyright atom:copyright copyright
+        copyrights dc:rights rights}))
+    end
+
+    def images
+      try_xpaths_all(channel_node, %w{image logo apple-wallpapers:image 
+        imageUrl}).map do |node|
+          # TODO: Massage href value
+          FeedTools::Image.new(
+            select_value(node, 'title/text()'),
+            select_value(node, 'description/text()'),
+            select_value(node, %w{url/text() @rdf:resource @href text()}),
+            select_value(node, 'link/text()'),
+            select_value(node, 'height/text()').to_i,
+            select_value(node, 'width/text()').to_i,
+            select_value(node, %w{style/text() @style})
+          )
+      end.concat(
+        links.select { |link| link.type =~ /^image/ && link.href }.map do |link|
+          FeedTools::Image.new(link.title, nil, link.href)
+        end
+      )
+    end
+
+    def categories
+      try_xpaths_all(channel_node, %w{category dc:subject}).map do |node|
+        FeedTools::Category.new(
+          select_value(node, %w{term text()}),
+          select_value(node, %w{@scheme @domain}),
+          select_value(node, '@label')
+        )
+      end
+    end
+
     attr_writer :title, :subtitle, :links, :entries, :feed_type,
-      :feed_version, :guid, :href, :feed_data_type, :last_retrieved, :cloud
+      :feed_version, :guid, :href, :feed_data_type, :last_retrieved, :cloud,
+      :encoding, :rights, :document, :images, :categories
 
     cache :title, :href, :link, :feed_data_type, :last_retrieved
           :feed_data, :http_headers, :time_to_live
 
     memoize :subtitle, :itunes_summary, :itunes_subtitle, :itunes_author,
             :time, :updated, :published, :feed_type, :channel_node, :guid, 
-            :language, :explicit, :cloud
+            :language, :explicit, :cloud, :encoding, :document, :rights,
+            :images, :categories
 
     alias_method :url, :href
     alias_method :url=, :href=
