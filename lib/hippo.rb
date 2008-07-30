@@ -88,7 +88,8 @@ module Hippo
     :always_strip_wrapper_elements => false,
     :disable_update_from_remote => false,
     :max_ttl => (3 * 24 * 60 * 60 * 60), # 3 days
-    :default_ttl => (1 * 60 * 60) # 1 hour
+    :default_ttl => (1 * 60 * 60), # 1 hour
+    :entry_sorting_property => 'time'
   }
   
   PROCESSORS = %w{libxml} # TODO: hpricot rexml
@@ -146,6 +147,7 @@ begin
   require "#{module_dir}/caching"
   require "#{module_dir}/processing"
   require "#{module_dir}/sanitize"
+  require "#{module_dir}/urls"
   
   # Core classes
   require "#{module_dir}/feed"

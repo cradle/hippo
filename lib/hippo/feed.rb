@@ -401,6 +401,41 @@ module Hippo
     end
     cache :href
     
+    def entries
+      [
+        try_xpaths_all(channel_node, %w{atom10:entry atom03:entry atom:entry entry}),
+        try_xpaths_all(root_node, %w{rss10:item rss11:items/rss11:item rss11:items/item
+            items/rss11:item items/item item atom10:entry atom03:entry atom:entry entry story}),
+        try_xpaths_all(channel_node, %w{rss10:item rss11:items/rss11:item 
+          rss11:items/item items/rss11:item items/item item story})
+        ].flatten.compact.map do |entry_node|
+          returning Hippo::FeedItem.new do |item|
+            item.feed = self
+            item.root_node = node
+          end
+      end.sort_by do |entry|
+        if Hippo.defaults[:entry_sorting_property]
+          if Hippo.defaults[:entry_sorting_property] == 'time'
+            # Sort by time, descending order
+            - (entry.time or Time.utc(1970)).to_i
+          else
+            entry.send(Hippo.defaults[:entry_sorting_property])
+          end
+        else
+          1
+        end
+      end
+    end
+    memoize_writer :entries
+    
+    def <<(value)
+      raise ArgumentError, "You may only add FeedItem objects to the feed." unless
+        value.is_a?(Hippo::FeedItem)
+      @entries ||= []
+      value.feed = self
+      @entries << value
+    end
+    
     alias_method :url, :href
     alias_method :url=, :href=
     alias_method :tagline, :subtitle
