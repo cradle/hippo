@@ -3,7 +3,7 @@ module FeedTools
   module Caching
     def self.included(base)
       base.extend ClassMethods
-      base.include FeedTools::Memoize
+      base.extend FeedTools::Memoize
       base.send :attr_accessor, :cache
     end
 
@@ -20,10 +20,13 @@ module FeedTools
             end
             
             def #{name}_with_caching=(value)
-              #{name}_without_caching = value
+              self.#{name}_without_caching = value
               self.cache.#{name} = value if self.cache
             end
           }
+          unless instance_methods.include?("#{name}=")
+            attr_writer :"#{name}"
+          end
           alias_method_chain name, :caching
           alias_method_chain :"#{name}=", :caching
           memoize name
