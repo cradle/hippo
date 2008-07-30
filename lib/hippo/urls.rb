@@ -1,4 +1,4 @@
-module FeedTools
+module Hippo
   module URLs
     # Encapsulate the file:// resolution and URI normalization
     def resolve_and_normalize_url(url)

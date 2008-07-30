@@ -21,24 +21,24 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-module FeedTools
+module Hippo
   # Delegates routines that process XML to the chosen parsing framework
   module Processing
     # Attempts to find the first node matching one of the given XPath expressions
     # underneath one of the given nodes.
     def try_xpaths(nodes, paths, options={})
-      FeedTools.processor.try_xpaths(nodes, paths, options)
+      Hippo.processor.try_xpaths(nodes, paths, options)
     end
 
     # Finds all of the nodes matching the XPath expressions underneath any
     # of the given nodes.
     def try_xpaths_all(nodes, paths, options={})
-      FeedTools.processor.try_xpaths_all(nodes, paths, options)
+      Hippo.processor.try_xpaths_all(nodes, paths, options)
     end
 
     # Returns the root node for the document (requires #sdocument accessor)
     def root_node(options={})
-      @root_node ||= FeedTools.processor.root_node(document, options)
+      @root_node ||= Hippo.processor.root_node(document, options)
     end
 
     # Shortcut for try_xpaths with :select_result_value option
@@ -53,12 +53,12 @@ module FeedTools
 
     # Parses an XML Document from the given string
     def parse(data)
-      FeedTools.processor.parse(data)
+      Hippo.processor.parse(data)
     end
 
     # Determines whether the given node has the given namespace
     def has_namespace?(node, namespace)
-      FeedTools.processor.has_namespace?(node, namespace)
+      Hippo.processor.has_namespace?(node, namespace)
     end
 
     # Extracts text element from the node and strips any wrapping element
@@ -69,17 +69,17 @@ module FeedTools
     # Strips wrapping elements around the given text
     # e.g. <div> elements in an Atom feed
     def strip_wrapper(text)
-      FeedTools.processor.strip_wrapper(text)
+      Hippo.processor.strip_wrapper(text)
     end
 
     # Returns a node's content normalized as HTML
     def process_text(node)
-      FeedTools.processor.process_text(node, feed_type, feed_version, [base_uri])
+      Hippo.processor.process_text(node, feed_type, feed_version, [base_uri])
     end
 
     # Returns the character encoding as determined by the XML processor
     def encoding_from_xml
-      FeedTools.processor.encoding(document)
+      Hippo.processor.encoding(document)
     end
   end
 end

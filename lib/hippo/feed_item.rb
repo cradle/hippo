@@ -1,4 +1,4 @@
-module FeedTools
+module Hippo
   class FeedItem
     # To be replaced later
     attr_accessor :title, :content, :summary, :link, :id

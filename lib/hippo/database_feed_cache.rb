@@ -29,11 +29,11 @@ require 'active_record'
 #= database_feed_cache.rb
 #
 # The <tt>DatabaseFeedCache</tt> is the default caching mechanism for
-# FeedTools.  This mechanism can be replaced easily by creating another
+# Hippo.  This mechanism can be replaced easily by creating another
 # class with the required set of methods and setting
-# <tt>FeedTools#feed_cache</tt> to the new class.
-module FeedTools
-  # The default caching mechanism for the FeedTools module
+# <tt>Hippo#feed_cache</tt> to the new class.
+module Hippo
+  # The default caching mechanism for the Hippo module
   class DatabaseFeedCache < ActiveRecord::Base
     # Overrides the default table name to use the "cached_feeds" table.
     set_table_name "cached_feeds"
@@ -81,7 +81,7 @@ module FeedTools
             File.exist?(File.expand_path(file)) 
           end
           database_config_hash = YAML::load_file(database_config_file)
-          database_config_hash = database_config_hash[FeedTools::ENVIRONMENT] || database_config_hash
+          database_config_hash = database_config_hash[Hippo::ENVIRONMENT] || database_config_hash
           ActiveRecord::Base.configurations = database_config_hash
           ActiveRecord::Base.establish_connection(database_config_hash)
           ActiveRecord::Base.connection

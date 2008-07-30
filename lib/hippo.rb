@@ -21,7 +21,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-module FeedTools
+module Hippo
   NAMESPACES = {
     "access" => "http://www.bloglines.com/about/specs/fac-1.0",
     "admin" => "http://webns.net/mvcb/",
@@ -92,14 +92,14 @@ module FeedTools
   }
   
   PROCESSORS = %w{libxml} # TODO: hpricot rexml
-  ENVIRONMENT = ENV['FEED_TOOLS_ENV'] || ENV['RAILS_ENV'] || 'development'
+  ENVIRONMENT = ENV['HIPPO_ENV'] || ENV['RAILS_ENV'] || 'development'
   
   class << self
     attr_accessor :processor, :feed_cache
     
     def feed_cache
       @feed_cache ||= begin
-        cache =  FeedTools.const_get(defaults[:feed_cache])
+        cache =  Hippo.const_get(defaults[:feed_cache])
         cache.initialize_cache
         cache
       rescue NameError
@@ -108,12 +108,12 @@ module FeedTools
     end
     
     def defaults
-      @defaults ||= ::FeedTools::DEFAULTS.dup
+      @defaults ||= ::Hippo::DEFAULTS.dup
     end
 
     def load_processor(name)
       require "#{module_dir}/processors/#{name}"
-      self.processor = ::FeedTools::Processors.const_get(name.capitalize)
+      self.processor = ::Hippo::Processors.const_get(name.capitalize)
     end
   end
 end
@@ -133,12 +133,12 @@ begin
   require 'activesupport'
 
   # Now try to load an XML backend
-  procs = FeedTools::PROCESSORS.dup
+  procs = Hippo::PROCESSORS.dup
   begin
-    FeedTools.load_processor(procs.shift)
+    Hippo.load_processor(procs.shift)
   rescue LoadError, NameError
     retry unless procs.empty?
-    raise LoadError.new("No FeedTools XML processors available. Tried #{FeedTools::PROCESSORS.join(', ')}.")
+    raise LoadError.new("No Hippo XML processors available. Tried #{Hippo::PROCESSORS.join(', ')}.")
   end
   
   # Mixins

@@ -1,4 +1,4 @@
-module FeedTools
+module Hippo
   module Sanitize
     # Unescapes HTML entities and removes script tags, stripping whitespace 
     # from the result

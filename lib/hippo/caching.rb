@@ -1,9 +1,9 @@
-module FeedTools
+module Hippo
   # Injects support for caching of feed data
   module Caching
     def self.included(base)
       base.extend ClassMethods
-      base.extend FeedTools::Memoize
+      base.extend Hippo::Memoize
       base.send :attr_accessor, :cache
     end
 

@@ -1,4 +1,4 @@
-module FeedTools
+module Hippo
   module Memoize
     def memoize(*names)
       names.each do |name|

@@ -1,9 +1,9 @@
-module FeedTools
+module Hippo
   class Feed
-    include FeedTools::Processing
-    include FeedTools::Caching
-    include FeedTools::Sanitize
-    include FeedTools::URLs
+    include Hippo::Processing
+    include Hippo::Caching
+    include Hippo::Sanitize
+    include Hippo::URLs
     
     def title
       title_node = try_xpaths(channel_node, %w{atom10:title atom03:title
@@ -92,7 +92,7 @@ module FeedTools
         when /^rdf/, 'rss'
           'rss'
         when 'channel'
-          has_namespace?(root_node, FeedTools::NAMESPACES['rss11']) ? 'rss' : 'cdf'
+          has_namespace?(root_node, Hippo::NAMESPACES['rss11']) ? 'rss' : 'cdf'
         end
       else
         nil
@@ -106,8 +106,8 @@ module FeedTools
     cache :http_headers
     
     def time_to_live
-      time = syn_frequency || _ttl || schedule || FeedTools.defaults[:default_ttl]
-      time >= FeedTools.defaults[:max_ttl] ? FeedTools.defaults[:max_ttl] : time
+      time = syn_frequency || _ttl || schedule || Hippo.defaults[:default_ttl]
+      time >= Hippo.defaults[:max_ttl] ? Hippo.defaults[:max_ttl] : time
     end
     memoize_writer :time_to_live
     
@@ -129,20 +129,20 @@ module FeedTools
         case feed_type
         when 'atom'
           case default_namespace
-          when FeedTools::NAMESPACES['atom10']
+          when Hippo::NAMESPACES['atom10']
             1.0
-          when FeedTools::NAMESPACES['atom03']
+          when Hippo::NAMESPACES['atom03']
             0.3
           else
             stated_version.to_f if stated_version
           end
         when 'rss'
           case default_namespace
-          when FeedTools::NAMESPACES['rss09']
+          when Hippo::NAMESPACES['rss09']
             0.9
-          when FeedTools::NAMESPACES['rss10']
+          when Hippo::NAMESPACES['rss10']
             1.0
-          when FeedTools::NAMESPACES['rss11']
+          when Hippo::NAMESPACES['rss11']
             1.1
           else
             if stated_version
@@ -185,7 +185,7 @@ module FeedTools
     cache :last_retrieved
     
     def cloud
-      returning FeedTools::Cloud.new do |c|
+      returning Hippo::Cloud.new do |c|
         c.domain = select_value(channel_node, 'cloud/@domain')
         c.port = select_value(channel_node, 'cloud/@port')
         c.path = select_value(channel_node, 'cloud/@path')
@@ -228,7 +228,7 @@ module FeedTools
       try_xpaths_all(channel_node, %w{image logo apple-wallpapers:image 
         imageUrl}).map do |node|
           # TODO: Massage href value
-          FeedTools::Image.new(
+          Hippo::Image.new(
             select_value(node, 'title/text()'),
             select_value(node, 'description/text()'),
             select_value(node, %w{url/text() @rdf:resource @href text()}),
@@ -239,7 +239,7 @@ module FeedTools
           )
       end.concat(
         links.select { |link| link.type =~ /^image/ && link.href }.map do |link|
-          FeedTools::Image.new(link.title, nil, link.href)
+          Hippo::Image.new(link.title, nil, link.href)
         end
       )
     end
@@ -247,7 +247,7 @@ module FeedTools
     
     def categories
       try_xpaths_all(channel_node, %w{category dc:subject}).map do |node|
-        FeedTools::Category.new(
+        Hippo::Category.new(
           select_value(node, %w{term text()}),
           select_value(node, %w{@scheme @domain}),
           select_value(node, '@label')
@@ -278,7 +278,7 @@ module FeedTools
     
     def text_input
       if node = try_xpaths(channel_node, 'textInput')
-        returning FeedTools::TextInput.new do |input|
+        returning Hippo::TextInput.new do |input|
           input.title = select_value(node, 'title/text()')
           input.description = select_value(node, 'description/text()')
           input.link = select_value(node, 'link/text()')
@@ -312,7 +312,7 @@ module FeedTools
       author_node = try_xpaths(channel_node, %w{atom10:author atom03:author 
         atom:author author managingEditor dc:author dc:creator})
       if author_node
-        returning FeedTools::Author.new do |a|
+        returning Hippo::Author.new do |a|
           a.parse!(author_node)
           a.name = nil if select_value(author_node, "@gr:unknown-author") == "true" && 
             a.name == "(author unknown)"
@@ -328,7 +328,7 @@ module FeedTools
           new_author.respond_to?(:url)
         @author = new_author
       else
-        @author ||= FeedTools::Author.new
+        @author ||= Hippo::Author.new
         @author.name = new_author
       end
     end
@@ -336,7 +336,7 @@ module FeedTools
     def publisher
       publisher_node = try_xpaths(channel_node, %w{webMaster dc:publisher})
       if publisher_node
-        returning FeedTools::Author.new do |p|
+        returning Hippo::Author.new do |p|
           p.parse!(publisher_node)
         end
       end
@@ -349,7 +349,7 @@ module FeedTools
           new_publisher.respond_to?(:url)
         @publisher = new_publisher
       else
-        @publisher ||= FeedTools::Author.new
+        @publisher ||= Hippo::Author.new
         @publisher.name = new_publisher
       end
     end
@@ -385,7 +385,7 @@ module FeedTools
     def links
       try_xpaths_all(channel_node, %w{atom10:link atom03:link atom:link link
         channelLink a url href}).map do |link_node|
-          returning FeedTools::Link.new do |l|
+          returning Hippo::Link.new do |l|
             l.parse!(link_node, self)
           end
       end

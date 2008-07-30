@@ -22,7 +22,7 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #++
 
-module FeedTools
+module Hippo
   # Represents a feed/feed item's category
   Category = Struct.new(:term, :scheme, :label) do
     alias_method :value, :term
@@ -33,8 +33,8 @@ module FeedTools
   # Represents a feed/feed item's author
   class Author
     attr_accessor :name, :email, :href, :raw
-    include FeedTools::Processing
-    include FeedTools::Sanitize
+    include Hippo::Processing
+    include Hippo::Sanitize
 
     alias_method :url, :href
     alias_method :url=, :href=
@@ -145,8 +145,8 @@ module FeedTools
 
   # Represents a simple hyperlink
   class Link
-    include FeedTools::Processing
-    include FeedTools::Sanitize
+    include Hippo::Processing
+    include Hippo::Sanitize
 
     attr_accessor :href, :hreflang, :rel, :type, :title, :length
     alias_method :url, :href
@@ -220,9 +220,12 @@ module FeedTools
   end
 
   # This class stores information about a feed item's file enclosures.
-  Enclosure = Struct.new(:href, :type, :file_size, :duration, :height, :width,
-    :bitrate, :framerate, :thumbnail, :categories, :hash, :player, :credits, :text,
-    :versions, :default_version, :is_default, :explicit, :expression) do
+  class Enclosure 
+    ATTRIBUTES = [:href, :type, :file_size, :duration, :height, :width,
+      :bitrate, :framerate, :thumbnail, :categories, :hash, :player, :credits, :text,
+      :versions, :default_version, :is_default, :explicit, :expression]
+    attr_accessor *ATTRIBUTES
+    
     alias_method :url, :href
     alias_method :url=, :href=
     alias_method :link, :href
@@ -231,7 +234,9 @@ module FeedTools
     alias_method :explicit?, :explicit
 
     def initialize(*args)
-      super
+      ATTRIBUTES.each do |a|
+        send("#{a}=", args.shift)
+      end
       @expression ||= 'full'
     end
 
