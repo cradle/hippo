@@ -279,6 +279,15 @@ module FeedTools
       end
       return buffer
     end
+    
+    ###
+    # TODO: HACK: (Glenn) WHY was this removed; did they
+    # have something better in mind?!? Pfft.
+    # was removed http://github.com/cradle/feedtools/commit/3ea647d38b343216ce8958d49586429cbbd9442a
+    ###
+    def self.sanitize_html(str)
+      str
+    end
 
     # Returns true if the type string provided indicates that something is
     # xml or xhtml content.
